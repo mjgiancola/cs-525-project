@@ -1,13 +1,29 @@
 import tensorflow as tf
 
+import matplotlib
+import matplotlib.pyplot as plt
+
+import numpy as np
+
+# Constants
 DIMS = 10
+NUM_LAYERS = 2
+STATE_SIZE = 20
+TRAINING_STEPS = 20 # 100 in the paper ?
+
+# Import MNIST data set
+from tensorflow.examples.tutorials.mnist import input_data
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 scale = tf.random_uniform([DIMS], 0.5, 1.5)
 
-def f(x):
-  x = scale * x
-  return tf.reduce_sum(x*x)
+# Returns error of predictions
+def f(y_hats, y_actuals):
+  cross_entropy = tf.reduce_mean(
+    tf.nn.softmax_cross_entropy_with_logits(labels=y_actuals, logits=y_hats))
+  pass
 
+# Optimizers to compare
 def g_sgd(gradients, state, learning_rate = 0.1):
   return -learning_rate*gradients, state
 
@@ -17,8 +33,6 @@ def g_rms(gradients, state, learning_rate = 0.1, decay_rate = 0.99):
   state = decay_rate * state + (1 - decay_rate) * tf.pow(gradients, 2)
   update = -learning_rate * gradients / ( tf.sqrt(state) + 1e-5 )
   return update, state
-
-TRAINING_STEPS = 20 # 100 in the paper ?
 
 initial_pos = tf.random_uniform([DIMS], -1., 1.)
 
@@ -41,10 +55,6 @@ rms_losses = learn(g_rms)
 sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
 
-import matplotlib
-import matplotlib.pyplot as plt
-
-import numpy as np
 
 x = np.arange(TRAINING_STEPS)
 # for _ in xrange(3):
@@ -54,10 +64,6 @@ x = np.arange(TRAINING_STEPS)
 #   plt.legend(handles=[p1,p2])
 #   plt.title('Losses')
 #   plt.show()
-
-
-NUM_LAYERS = 2
-STATE_SIZE = 20
 
 # These lines were changed from the original, bc the original didn't compile...
 cell = tf.nn.rnn_cell.MultiRNNCell( [tf.nn.rnn_cell.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
@@ -94,7 +100,7 @@ for i in xrange(3000):
   if i % 1000 == 0:
     print(ave / 1000 if i!=0 else ave)
 
-print ave / 1000 # Why divided by 1000?
+print ave / 1000
 
 for _ in range(3):
   sgd_1, rms_1, rnn_1 = sess.run( [sgd_losses, rms_losses, rnn_losses] )

@@ -1,6 +1,14 @@
 import tensorflow as tf
 
+import matplotlib
+import matplotlib.pyplot as plt
+
+import numpy as np
+
 DIMS = 10
+NUM_LAYERS = 2
+STATE_SIZE = 20
+TRAINING_STEPS = 20 # 100 in the paper ?
 
 scale = tf.random_uniform([DIMS], 0.5, 1.5)
 
@@ -18,7 +26,13 @@ def g_rms(gradients, state, learning_rate = 0.1, decay_rate = 0.99):
   update = -learning_rate * gradients / ( tf.sqrt(state) + 1e-5 )
   return update, state
 
-TRAINING_STEPS = 20 # 100 in the paper ?
+def g_rnn(gradients, state):
+  gradients = tf.expand_dims(gradients, axis=1)
+
+  if state is None:
+    state = [ [tf.zeros([DIMS, STATE_SIZE])] * 2 ] * NUM_LAYERS
+  update, state = cell(gradients, state)
+  return tf.squeeze(update, axis=[1]), state # No idea what squeeze does...
 
 initial_pos = tf.random_uniform([DIMS], -1., 1.)
 
@@ -35,43 +49,27 @@ def learn(optimizer):
     x += update
   return losses
 
-sgd_losses = learn(g_sgd)
-rms_losses = learn(g_rms)
-
 sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
 
-import matplotlib
-import matplotlib.pyplot as plt
-
-import numpy as np
+sgd_losses = learn(g_sgd)
+rms_losses = learn(g_rms)
 
 x = np.arange(TRAINING_STEPS)
-# for _ in xrange(3):
-#   sgd_1, rms_1 = sess.run([sgd_losses, rms_losses])
-#   p1, = plt.plot(x, sgd_1, label='SGD')
-#   p2, = plt.plot(x, rms_1, label='RMS')
-#   plt.legend(handles=[p1,p2])
-#   plt.title('Losses')
-#   plt.show()
+for _ in xrange(3):
+  sgd_1, rms_1 = sess.run([sgd_losses, rms_losses])
+  p1, = plt.plot(x, sgd_1, label='SGD')
+  p2, = plt.plot(x, rms_1, label='RMS')
+  plt.legend(handles=[p1,p2])
+  plt.title('Losses')
+  plt.show()
 
-
-NUM_LAYERS = 2
-STATE_SIZE = 20
 
 # These lines were changed from the original, bc the original didn't compile...
 cell = tf.nn.rnn_cell.MultiRNNCell( [tf.nn.rnn_cell.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
 cell = tf.nn.rnn_cell.InputProjectionWrapper(cell, STATE_SIZE)
 cell = tf.nn.rnn_cell.OutputProjectionWrapper(cell, 1)
 cell = tf.make_template('cell', cell)
-
-def g_rnn(gradients, state):
-  gradients = tf.expand_dims(gradients, axis=1)
-
-  if state is None:
-    state = [ [tf.zeros([DIMS, STATE_SIZE])] * 2 ] * NUM_LAYERS
-  update, state = cell(gradients, state)
-  return tf.squeeze(update, axis=[1]), state # No idea what squeeze does...
 
 rnn_losses = learn(g_rnn)
 sum_losses = tf.reduce_sum(rnn_losses)
