@@ -5,6 +5,7 @@ DIMS = 10
 scale = tf.random_uniform([DIMS], 0.5, 1.5)
 
 def f(x):
+  """ Loss function. """
   x = scale * x
   return tf.reduce_sum(x*x)
 
@@ -60,9 +61,9 @@ NUM_LAYERS = 2
 STATE_SIZE = 20
 
 # These lines were changed from the original, bc the original didn't compile...
-cell = tf.nn.rnn_cell.MultiRNNCell( [tf.nn.rnn_cell.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
-cell = tf.nn.rnn_cell.InputProjectionWrapper(cell, STATE_SIZE)
-cell = tf.nn.rnn_cell.OutputProjectionWrapper(cell, 1)
+cell = tf.contrib.rnn.MultiRNNCell( [tf.contrib.rnn.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
+cell = tf.contrib.rnn.InputProjectionWrapper(cell, STATE_SIZE)
+cell = tf.contrib.rnn.OutputProjectionWrapper(cell, 1)
 cell = tf.make_template('cell', cell)
 
 def g_rnn(gradients, state):
