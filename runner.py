@@ -22,17 +22,6 @@ TRAINING_STEPS = 20 # 100 in the paper ?
 NUM_LAYERS = 2
 STATE_SIZE = 20 # n of hidden units
 
-
-def init_LSTM():
-    # These lines were changed from the original, bc the original didn't compile...
-    cell = tf.contrib.rnn.MultiRNNCell( [tf.contrib.rnn.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
-    cell = tf.contrib.rnn.InputProjectionWrapper(cell, STATE_SIZE)
-    cell = tf.contrib.rnn.OutputProjectionWrapper(cell, 1)
-    cell = tf.make_template('cell', cell)
-    return cell
-
-cell = init_LSTM()
-
 # =================================================================================================
 
 def f(x):
@@ -66,6 +55,14 @@ def learn(optimizer):
 # =================================================================================================
 
 
+def init_LSTM():
+    # These lines were changed from the original, bc the original didn't compile...
+    cell = tf.contrib.rnn.MultiRNNCell( [tf.contrib.rnn.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
+    cell = tf.contrib.rnn.InputProjectionWrapper(cell, STATE_SIZE)
+    cell = tf.contrib.rnn.OutputProjectionWrapper(cell, 1)
+    cell = tf.make_template('cell', cell) # wraps cell function so it does variable sharing
+    return cell
+
 def g_sgd(gradients, state, learning_rate = 0.1):
     """ Optimizer: stochastic gradient descent. """
     return -learning_rate*gradients, state
@@ -79,12 +76,14 @@ def g_rms(gradients, state, learning_rate = 0.1, decay_rate = 0.99):
     update = -learning_rate * gradients / ( tf.sqrt(state) + 1e-5 )
     return update, state
 
+# cell = init_LSTM() # was a global before
 
 def g_rnn(gradients, state):
     """ Optimizer: Our custom LSTM """
     gradients = tf.expand_dims(gradients, axis=1)
     if state is None:
         state = [ [tf.zeros([DIMS, STATE_SIZE])] * 2 ] * NUM_LAYERS
+    cell = init_LSTM() # was a global before
     update, state = cell(gradients, state)
     return tf.squeeze(update, axis=[1]), state # No idea what squeeze does...
 
@@ -94,7 +93,9 @@ def g_rnn(gradients, state):
 def optimize_step(loss):
     """ Returns an ADAM update step to our LSTM on a given loss function.
         Because the entire training loop is in the graph we can use Back-Propagation Through Time 
-            (BPTT) and a meta-optimizer to minimize this value! And this is the main point:
+            (BPTT) and a meta-optimizer to minimize this value. Because everything through the
+            computation of the loss function is differentiable, TensorFlow can work out the 
+            gradients of the LSTM parameters with respect the sum of the losses on f().
         Returns:
             (tf.Operation) ADAM optimization step for the LSTM
     """
@@ -102,6 +103,7 @@ def optimize_step(loss):
     gradients, v = zip(*optimizer.compute_gradients(loss))
     gradients, _ = tf.clip_by_global_norm(gradients, 1.) # important because some values are large
     return optimizer.apply_gradients(zip(gradients, v))
+
 
 def train_LSTM(sess, sum_losses, apply_update):
     """ Train the LSTM. """
@@ -160,9 +162,9 @@ def main():
     rnn_losses = learn(g_rnn)
     sum_losses = tf.reduce_sum(rnn_losses)
     apply_update = optimize_step(sum_losses)
-    display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1)
+    # display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1)
     train_LSTM(sess, sum_losses, apply_update)
-    display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1)
+    # display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1)
 
 
 if __name__ == '__main__':
