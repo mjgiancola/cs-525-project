@@ -83,7 +83,7 @@ def initialize_x(DIMS):
     return tf.random_uniform([DIMS], -1., 1.)
 
 
-def learn(optimizer, problem, batch):
+def learn_optimizee(optimizer, problem, batch):
     """ Takes an optimizer function, and applies it in a loop (unroll all the training steps)
             for number of steps and collects the value of the function f (loss) at each step.
         Args:
@@ -100,6 +100,7 @@ def learn(optimizer, problem, batch):
         update, state = optimizer(grads, state, problem.DIMS)
         x += update
     return losses
+
 
 def assemble_feed_dict(batch):
     batch_x, batch_y = batch[0], batch[1]
@@ -144,13 +145,13 @@ def train_LSTM(sess, sum_losses, apply_update, batch):
 # =================================================================================================
 # Plotting (these can be refactored into a single function)
 
-def display_LSTM(sess, loss_list, n_times, batch):
-    """ Evaluate on the same problem"""
+def evaluate_LSTM(sess, loss_list, n_times, batch):
+    """ Evaluate on the same problem. """
     print('Evaluate LSTM cost tensors...')
     assert len(loss_list) == 3; 'loss_list should have 3 components'
     x = np.arange(TRAINING_STEPS)
     for _ in range(n_times):
-        sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict=assemble_feed_dict(batch)) # evaluate loss tensors now that LSTM is trained
+        sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict=assemble_feed_dict(batch))
         p1, = plt.plot(x, sgd_1, label='SGD')
         p2, = plt.plot(x, rms_1, label='RMS')
         p3, = plt.plot(x, rnn_1, label='RNN')
@@ -158,7 +159,8 @@ def display_LSTM(sess, loss_list, n_times, batch):
         plt.title('Losses')
         now = time.strftime("%H%M%S")
         plt.savefig('./images/lstm_result_' + now)
-        plt.show() # plot.clf()
+        # plt.show()
+        plot.clf()
 
 
 def display_base_optimizers(sess, loss_list, n_times, batch):
@@ -172,10 +174,10 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
         p2, = plt.plot(x, rms_1, label='RMS')
         plt.legend(handles=[p1,p2])
         plt.title('Losses')
-        # plt.show()
         now = time.strftime("%H%M%S")
         plt.savefig('./images/base_result_' + now)
-
+        # plt.show()
+        plt.clf()
 
 
 # =================================================================================================
@@ -192,9 +194,9 @@ def main():
     batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='batch_x')
     batch_y = tf.placeholder(tf.float32, shape=[None, 10], name ='batch_y')
     batch = (batch_x, batch_y)
-    sgd_losses = learn(g_sgd, problem, batch)
-    rms_losses = learn(g_rms, problem, batch)
-    rnn_losses = learn(g_rnn, problem, batch)
+    sgd_losses = learn_optimizee(g_sgd, problem, batch)
+    rms_losses = learn_optimizee(g_rms, problem, batch)
+    rnn_losses = learn_optimizee(g_rnn, problem, batch)
 
     sum_losses = tf.reduce_sum(rnn_losses)
     apply_update = optimize_step(sum_losses)
@@ -206,7 +208,7 @@ def main():
     save_path = saver.save(sess, "./tmp/model.ckpt")
     print("Model saved in file: %s" % save_path)
 
-    display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
+    evaluate_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
 
 
 # def big_test():
@@ -230,7 +232,7 @@ def main():
 #         rnn_losses = learn(g_rnn, problem, batch)
 #         sum_losses = tf.reduce_sum(rnn_losses)
 #         apply_update = optimize_step(sum_losses)
-#         display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
+#         evaluate_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
 #         tf.reset_default_graph() # do this every time to prevent side effect issues
     
 
