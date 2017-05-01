@@ -22,7 +22,7 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
-TRAINING_STEPS = 20 # 100 in the paper ?
+TRAINING_STEPS = 100 # 100 in the paper ?
 TRAIN_LSTM_STEPS = 100
 
 # LSTM params
@@ -61,14 +61,14 @@ def g_rms(gradients, state, DIMS, learning_rate = 0.1, decay_rate = 0.99):
     update = -learning_rate * gradients / ( tf.sqrt(state) + 1e-5 )
     return update, state
 
-# cell = init_LSTM() # was a global before
+cell = init_LSTM()
 
 def g_rnn(gradients, state, DIMS):
     """ Optimizer: Our custom LSTM """
     gradients = tf.expand_dims(gradients, axis=1)
     if state is None:
         state = [ [tf.zeros([DIMS, STATE_SIZE])] * 2 ] * NUM_LAYERS
-    cell = init_LSTM() # was a global before
+    # cell = init_LSTM() # was a global before
     update, state = cell(gradients, state)
     return tf.squeeze(update, axis=[1]), state # No idea what squeeze does...
 
