@@ -39,7 +39,6 @@ def NEURAL_BASE(weights, batch, activation, SIZE_INPUT=784, SIZE_OUTPUT=10,
         Returns:
             (tf.Tensor): the cost (which we are trying to minimize) = 1/ % accurate on train set
     """
-<<<<<<< HEAD
     with tf.variable_scope('Optimizee_ANN'):
         SIZE_H1 = 20
         LEN_W1 = SIZE_INPUT * SIZE_H1
@@ -59,23 +58,6 @@ def NEURAL_BASE(weights, batch, activation, SIZE_INPUT=784, SIZE_OUTPUT=10,
         cross_entropy = tf.reduce_mean(COST(labels=batch_y, logits=yhat))
         # tf.scalar_summary('optimizee cross entropy', cross_entropy)
     return cross_entropy
-=======
-    SIZE_H1 = 20
-    LEN_W1 = SIZE_INPUT * SIZE_H1
-    LEN_B1 = SIZE_H1
-    LEN_W2 = SIZE_H1 * SIZE_OUTPUT
-    LEN_B2 = SIZE_OUTPUT
-    DIMS = LEN_W1 + LEN_B1 + LEN_W2 + LEN_B2 
-
-    batch_x, batch_y = batch[0], batch[1]
-    W1 = tf.reshape(tf.slice(weights, [0], [LEN_W1]), [SIZE_INPUT, SIZE_H1])
-    b1 = tf.reshape(tf.slice(weights, [LEN_W1], [LEN_B1]), [SIZE_H1])
-    W2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1], [LEN_W2]), [SIZE_H1,SIZE_OUTPUT])
-    b2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1+LEN_W2], [LEN_B2]), [SIZE_OUTPUT])
-    h1 = activation(tf.matmul(batch_x, W1) + b1)
-    yhat = tf.matmul(h1, W2) + b2
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=batch_y, logits=yhat))
->>>>>>> 1ea0e136fe1ea15983620f8089eecc594d059e47
 
     # correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(batch_y,1))
     # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
