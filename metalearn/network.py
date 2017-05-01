@@ -28,7 +28,7 @@ def f_neural(weights, batch):
         Returns:
             (tf.Tensor): the cost (which we are trying to minimize) = 1/ % accurate on train set
     """
-    SIZE_H1 = 200
+    SIZE_H1 = 20
     LEN_W1 = SIZE_INPUT * SIZE_H1
     LEN_B1 = SIZE_H1
     LEN_W2 = SIZE_H1 * SIZE_OUTPUT

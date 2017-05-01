@@ -23,7 +23,7 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
 TRAINING_STEPS = 20 # 100 in the paper ?
-TRAIN_LSTM_STEPS = 2
+TRAIN_LSTM_STEPS = 100
 
 # LSTM params
 NUM_LAYERS = 2
