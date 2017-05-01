@@ -12,25 +12,28 @@ import matplotlib.pyplot as plt
 import time
 
 from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC, NN_PROBLEMS
-
+from metalearn.network import PROBLEM_FACE
 # =================================================================================================
 # Globals
 
 # Import MNIST data set
+print('Loading training data...')
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+prefix = 'smile_data/'
+trainingFaces = np.load(prefix + "trainingFaces.npy")
+trainingLabels = np.load(prefix + "trainingLabels.npy")
+testingFaces = np.load(prefix + "testingFaces.npy")
+testingLabels = np.load(prefix + "testingLabels.npy")
 
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
 TRAINING_STEPS = 20 # 100 in the paper ?
-TRAIN_LSTM_STEPS = 5
+TRAIN_LSTM_STEPS = 2
 
 # LSTM params
 NUM_LAYERS = 2
 STATE_SIZE = 20 # n of hidden units
-
-SIZE_INPUT = 784
-SIZE_OUTPUT = 10
 
 lstm_variables = None
 
@@ -44,7 +47,7 @@ def init_LSTM():
         cell = tf.contrib.rnn.InputProjectionWrapper(cell, STATE_SIZE)
         cell = tf.contrib.rnn.OutputProjectionWrapper(cell, 1)
         cell = tf.make_template('cell', cell) # wraps cell function so it does variable sharing
-        print(vs.name)
+        # print(vs.name)
         lstm_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=vs.name)
         return cell
 
@@ -107,14 +110,53 @@ def learn_optimizee(optimizer, problem, batch):
     return losses
 
 
-def assemble_feed_dict(batch):
+def shuffleArraysInUnison(x, y):
+    assert x.shape[0] == y.shape[0]
+    p = np.random.permutation(x.shape[0])
+    return x[p, :], y[p]
+
+
+def get_train_smile(batch_size):
+    x, y = shuffleArraysInUnison(trainingFaces, trainingLabels)
+    return x[:batch_size, :], y[:batch_size]
+
+
+def get_test_smile(batch_size):
+    x, y = shuffleArraysInUnison(testingFaces, testingLabels)
+    return x[:batch_size, :], y[:batch_size]
+
+
+def assemble_batch_template(batch, fcn):
     batch_x, batch_y = batch[0], batch[1]
     BATCH_SIZE = 128
-    batch_xs, batch_ys = mnist.train.next_batch(BATCH_SIZE)
+    batch_xs, batch_ys = fcn(BATCH_SIZE)
     return {
         batch_x: batch_xs,
         batch_y: batch_ys
     }
+
+
+def assemble_train_mnist(batch):
+    return assemble_batch_template(batch, mnist.train.next_batch)
+
+def assemble_test_mnist(batch):
+    return assemble_batch_template(batch, mnist.test.next_batch)
+
+def assemble_train_smile(batch):
+    return assemble_batch_template(batch, get_train_smile)
+
+def assemble_test_smile(batch):
+    return assemble_batch_template(batch, get_test_smile)
+
+
+# def assemble_test_mnist(batch):
+#     batch_x, batch_y = batch[0], batch[1]
+#     BATCH_SIZE = 128
+#     batch_xs, batch_ys = mnist.test.next_batch(BATCH_SIZE)
+#     return {
+#         batch_x: batch_xs,
+#         batch_y: batch_ys
+#     }
 
 
 def optimize_step(loss):
@@ -135,11 +177,14 @@ def optimize_step(loss):
 def train_LSTM(sess, sum_losses, apply_update, batch):
     """ Train the LSTM. """
     print('Train LSTM...')
+    # writer = tf.train.SummaryWriter('./tmp/nn_logs')
+    # merged = tf.merge_all_summaries()
+
     sess.run(tf.global_variables_initializer())
     # ave = 0
     for i in xrange(TRAIN_LSTM_STEPS):
         err, _ = sess.run([sum_losses, apply_update],
-            feed_dict= assemble_feed_dict(batch))
+            feed_dict= assemble_train_mnist(batch))
         print('Step {} Error: \t {}'.format(i, err))
         # ave += err
         # if i % 10 == 0:
@@ -156,7 +201,7 @@ def evaluate_LSTM(sess, loss_list, n_times, batch):
     assert len(loss_list) == 3; 'loss_list should have 3 components'
     x = np.arange(TRAINING_STEPS)
     for _ in range(n_times):
-        sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict=assemble_feed_dict(batch))
+        sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict=assemble_train_mnist(batch))
         p1, = plt.plot(x, sgd_1, label='SGD')
         p2, = plt.plot(x, rms_1, label='RMS')
         p3, = plt.plot(x, rnn_1, label='RNN')
@@ -174,7 +219,7 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
     assert len(loss_list) == 2; 'loss_list should have 2 components'
     x = np.arange(TRAINING_STEPS)
     for _ in xrange(n_times):
-        sgd_1, rms_1 = sess.run(loss_list, feed_dict=assemble_feed_dict(batch)) # evaluate loss tensors
+        sgd_1, rms_1 = sess.run(loss_list, feed_dict=assemble_train_mnist(batch)) # evaluate loss tensors
         p1, = plt.plot(x, sgd_1, label='SGD')
         p2, = plt.plot(x, rms_1, label='RMS')
         plt.legend(handles=[p1,p2])
@@ -193,10 +238,10 @@ def main():
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
-    print('Assemble computation graph...')
     problem = PROBLEM_NEURAL
-    print('Work on problem {}'.format(problem.name))
-    batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='batch_x')
+    print('Work on problem {}.'.format(problem.name))
+    print('Assemble computation graph...')
+    batch_x = tf.placeholder(tf.float32, [None, problem.SIZE_INPUT], name='batch_x')
     batch_y = tf.placeholder(tf.float32, shape=[None, 10], name ='batch_y')
     batch = (batch_x, batch_y)
     sgd_losses = learn_optimizee(g_sgd, problem, batch)
@@ -209,7 +254,7 @@ def main():
 
     saver = tf.train.Saver()
     
-    if 0:
+    if 1:
         train_LSTM(sess, sum_losses, apply_update, batch)
         print("LSTM model finished training.")
         save_path = saver.save(sess, "./tmp/model.ckpt",
