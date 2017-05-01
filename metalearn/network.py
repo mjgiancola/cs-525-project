@@ -13,10 +13,6 @@
 import tensorflow as tf
 
 def get_neural_dims(SIZE_INPUT, SIZE_OUTPUT, SIZE_H1):
-    SIZE_INPUT = 784
-    SIZE_OUTPUT = 10
-
-    SIZE_H1 = 200
     LEN_W1 = SIZE_INPUT * SIZE_H1
     LEN_B1 = SIZE_H1
     LEN_W2 = SIZE_H1 * SIZE_OUTPUT
@@ -25,12 +21,12 @@ def get_neural_dims(SIZE_INPUT, SIZE_OUTPUT, SIZE_H1):
     return NEURAL_DIMS
 
 NEURAL_DIMS = get_neural_dims(SIZE_INPUT=784, SIZE_OUTPUT=10, SIZE_H1=20)
-NEURAL_FACE_DIMS= get_neural_dims(SIZE_INPUT=576, SIZE_OUTPUT=1, SIZE_H1=20)
-
+NEURAL_FACE_DIMS = get_neural_dims(SIZE_INPUT=576, SIZE_OUTPUT=1, SIZE_H1=20)
+NEURAL_DIMS_200UNITS = get_neural_dims(SIZE_INPUT=784, SIZE_OUTPUT=10, SIZE_H1=200)
 # =================================================================================================
 # Neural network problem 
 
-def NEURAL_BASE(weights, batch, activation, SIZE_INPUT=784, SIZE_OUTPUT=10,
+def NEURAL_BASE(weights, batch, activation, SIZE_H1=20, SIZE_INPUT=784, SIZE_OUTPUT=10,
                         COST=tf.nn.softmax_cross_entropy_with_logits):
     """ This model has ~98.32% accuracy on MNIST.
         Args:
@@ -40,7 +36,7 @@ def NEURAL_BASE(weights, batch, activation, SIZE_INPUT=784, SIZE_OUTPUT=10,
             (tf.Tensor): the cost (which we are trying to minimize) = 1/ % accurate on train set
     """
     with tf.variable_scope('Optimizee_ANN'):
-        SIZE_H1 = 20
+        
         LEN_W1 = SIZE_INPUT * SIZE_H1
         LEN_B1 = SIZE_H1
         LEN_W2 = SIZE_H1 * SIZE_OUTPUT
@@ -79,7 +75,8 @@ def f_neural_tanh(weights, batch):
     return NEURAL_BASE(weights, batch, activation=tf.tanh)
 
 # def f_neural_twohidden(weights, batch):
-# def f_neural_200units(weights, batch):
+def f_neural_200units(weights, batch):
+    return NEURAL_BASE(weights, batch, SIZE_H1=200, activation=tf.relu)
 
 def f_neural_smile(weights, batch, activation):
     return NEURAL_BASE(weights, batch, activation=tf.nn.relu, SIZE_INPUT=576, SIZE_OUTPUT=1,
@@ -117,7 +114,7 @@ PROBLEM_NEURAL_ELU = Problem('NN_ELU', f_neural_elu, NEURAL_DIMS, SIZE_INPUT=784
 PROBLEM_NEURAL_SIGMOID = Problem('NN_SIGMOID', f_neural_sigmoid, NEURAL_DIMS, SIZE_INPUT=784)
 PROBLEM_NEURAL_TANH = Problem('NN_TANH', f_neural_tanh, NEURAL_DIMS, SIZE_INPUT=784)
 # PROBLEM_NEURAL_TWOHIDDEN = Problem('NN_TWOHIDDEN', f_neural_twohidden, NEURAL_DIMS_TWOHIDDEN)
-# PROBLEM_NEURAL_200UNITS = Problem('NN_200UNITS', f_neural_200units, NEURAL_DIMS_200UNITS)
+PROBLEM_NEURAL_200UNITS = Problem('NN_200UNITS', f_neural_200units, NEURAL_DIMS_200UNITS)
 PROBLEM_FACE = Problem('NN_FACE', f_neural_smile, NEURAL_FACE_DIMS, SIZE_INPUT=576)
 
 NN_PROBLEMS = [
@@ -126,6 +123,6 @@ NN_PROBLEMS = [
     PROBLEM_NEURAL_SIGMOID,
     PROBLEM_NEURAL_TANH,
     # PROBLEM_NEURAL_TWOHIDDEN,
-    # PROBLEM_NEURAL_200UNITS,
+    PROBLEM_NEURAL_200UNITS,
     PROBLEM_FACE
 ]

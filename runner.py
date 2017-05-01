@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import time
 
-from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC, NN_PROBLEMS, PROBLEM_NEURAL_SIGMOID, PROBLEM_NEURAL_TANH
+from metalearn.network import PROBLEM_NEURAL, PROBLEM_NEURAL_200UNITS, PROBLEM_QUADRATIC, NN_PROBLEMS, PROBLEM_NEURAL_SIGMOID, PROBLEM_NEURAL_TANH
 
 # =================================================================================================
 # Globals
@@ -29,8 +29,8 @@ testingLabels = np.load(prefix + "testingLabels.npy")
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
 
-TRAINING_STEPS = 100 # 100 in the paper ?
-TRAIN_LSTM_STEPS = 100
+TRAINING_STEPS = 100 # number of times to unroll the optimizee's training/evaluation loop
+TRAIN_LSTM_STEPS = 100 # of of steps for LSTM to train over (each one will train a new optimizee)
 
 # LSTM params
 NUM_LAYERS = 2
@@ -248,7 +248,7 @@ def main():
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
-    problem = PROBLEM_NEURAL
+    problem = PROBLEM_NEURAL_SIGMOID
     print('Work on problem {}.'.format(problem.name))
     print('Assemble computation graph...')
     batch_x = tf.placeholder(tf.float32, [None, problem.SIZE_INPUT], name='batch_x')
