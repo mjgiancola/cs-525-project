@@ -90,3 +90,5 @@ ENV/
 
 # Data folder
 MNIST_data
+
+.DS_Store
