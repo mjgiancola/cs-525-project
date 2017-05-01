@@ -11,8 +11,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import time
 
-from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC, NN_PROBLEMS
-from metalearn.network import PROBLEM_FACE
+from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC, NN_PROBLEMS, PROBLEM_NEURAL_SIGMOID, PROBLEM_NEURAL_TANH
+
 # =================================================================================================
 # Globals
 
@@ -28,8 +28,9 @@ testingLabels = np.load(prefix + "testingLabels.npy")
 
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
-TRAINING_STEPS = 20 # 100 in the paper ?
-TRAIN_LSTM_STEPS = 2
+
+TRAINING_STEPS = 100 # 100 in the paper ?
+TRAIN_LSTM_STEPS = 100
 
 # LSTM params
 NUM_LAYERS = 2
@@ -64,14 +65,14 @@ def g_rms(gradients, state, DIMS, learning_rate = 0.1, decay_rate = 0.99):
     update = -learning_rate * gradients / ( tf.sqrt(state) + 1e-5 )
     return update, state
 
-# cell = init_LSTM() # was a global before
+cell = init_LSTM()
 
 def g_rnn(gradients, state, DIMS):
     """ Optimizer: Our custom LSTM """
     gradients = tf.expand_dims(gradients, axis=1)
     if state is None:
         state = [ [tf.zeros([DIMS, STATE_SIZE])] * 2 ] * NUM_LAYERS
-    cell = init_LSTM() # was a global before
+    # cell = init_LSTM() # was a global before
     update, state = cell(gradients, state)
     return tf.squeeze(update, axis=[1]), state # No idea what squeeze does...
 
@@ -135,6 +136,15 @@ def assemble_batch_template(batch, fcn):
         batch_y: batch_ys
     }
 
+# Not used for now
+def evaluate_accuracy_with_validation_set(sess, accuracy, batch):
+    batch_x, batch_y = batch[0], batch[1]
+    batch_xs, batch_ys = mnist.validation.images, mnist.validation.labels
+    measured_accuracy = sess.run(accuracy, feed_dict = {
+        batch_x: batch_xs,
+        batch_y: batch_ys })
+    return measured_accuracy
+
 
 def assemble_train_mnist(batch):
     return assemble_batch_template(batch, mnist.train.next_batch)
@@ -168,7 +178,7 @@ def optimize_step(loss):
         Returns:
             (tf.Operation) ADAM optimization step for the LSTM
     """
-    optimizer = tf.train.AdamOptimizer(0.0001) # learning rate
+    optimizer = tf.train.AdamOptimizer(0.001) # learning rate
     gradients, v = zip(*optimizer.compute_gradients(loss))
     gradients, _ = tf.clip_by_global_norm(gradients, 1.) # important because some values are large
     return optimizer.apply_gradients(zip(gradients, v))
@@ -202,9 +212,9 @@ def evaluate_LSTM(sess, loss_list, n_times, batch):
     x = np.arange(TRAINING_STEPS)
     for _ in range(n_times):
         sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict=assemble_train_mnist(batch))
-        p1, = plt.plot(x, sgd_1, label='SGD')
-        p2, = plt.plot(x, rms_1, label='RMS')
-        p3, = plt.plot(x, rnn_1, label='RNN')
+        p1, = plt.plot(x, np.log10(sgd_1), label='SGD')
+        p2, = plt.plot(x, np.log10(rms_1), label='RMS')
+        p3, = plt.plot(x, np.log10(rnn_1), label='RNN')
         plt.legend(handles=[p1, p2, p3])
         plt.title('Losses')
         now = time.strftime("%H%M%S")
@@ -220,8 +230,8 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
     x = np.arange(TRAINING_STEPS)
     for _ in xrange(n_times):
         sgd_1, rms_1 = sess.run(loss_list, feed_dict=assemble_train_mnist(batch)) # evaluate loss tensors
-        p1, = plt.plot(x, sgd_1, label='SGD')
-        p2, = plt.plot(x, rms_1, label='RMS')
+        p1, = plt.plot(x, np.log10(sgd_1), label='SGD')
+        p2, = plt.plot(x, np.log10(rms_1), label='RMS')
         plt.legend(handles=[p1,p2])
         plt.title('Losses')
         now = time.strftime("%H%M%S")
@@ -256,13 +266,13 @@ def main():
     
     if 1:
         train_LSTM(sess, sum_losses, apply_update, batch)
-        print("LSTM model finished training.")
-        save_path = saver.save(sess, "./tmp/model.ckpt",
+        print("LSTM model finished training. Saving file...")
+        save_path = saver.save(sess, "./tmp/100_steps_0001_model.ckpt",
             lstm_variables)
         print("Model saved in file: %s" % save_path)
     else:
         print("Restoring model from memory...")
-        saver.restore(sess, "./tmp/model.ckpt")
+        saver.restore(sess, "./tmp/100_steps_0001_model.ckpt")
         print("Model restored.")
 
     evaluate_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)

@@ -1,0 +1,137 @@
+Extracting MNIST_data/train-images-idx3-ubyte.gz
+Extracting MNIST_data/train-labels-idx1-ubyte.gz
+Extracting MNIST_data/t10k-images-idx3-ubyte.gz
+Extracting MNIST_data/t10k-labels-idx1-ubyte.gz
+Initializing...
+2017-05-01 14:14:46.102205: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2017-05-01 14:14:46.102233: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-05-01 14:14:46.102237: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2017-05-01 14:14:46.102240: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-05-01 14:14:46.102243: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+Assemble computation graph...
+Work on problem NeuralNet
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+LSTM
+Sanity check: evaluate basic optimizer tensors...
+Train LSTM...
+Step 0 Error: 	 217.995422363
+Step 1 Error: 	 139.155639648
+Step 2 Error: 	 225.58203125
+Step 3 Error: 	 206.603057861
+Step 4 Error: 	 196.314697266
+Step 5 Error: 	 233.762435913
+Step 6 Error: 	 133.056427002
+Step 7 Error: 	 195.360687256
+Step 8 Error: 	 149.734527588
+Step 9 Error: 	 172.339004517
+Step 10 Error: 	 206.211212158
+Step 11 Error: 	 182.294189453
+Step 12 Error: 	 135.133392334
+Step 13 Error: 	 138.621917725
+Step 14 Error: 	 148.657714844
+Step 15 Error: 	 113.386482239
+Step 16 Error: 	 104.663421631
+Step 17 Error: 	 182.35168457
+Step 18 Error: 	 131.247711182
+Step 19 Error: 	 123.054031372
+Step 20 Error: 	 73.565864563
+Step 21 Error: 	 121.52872467
+Step 22 Error: 	 138.225463867
+Step 23 Error: 	 106.446983337
+Step 24 Error: 	 155.574829102
+Step 25 Error: 	 119.205307007
+Step 26 Error: 	 110.706565857
+Step 27 Error: 	 106.205383301
+Step 28 Error: 	 116.043243408
+Step 29 Error: 	 93.7166900635
+Step 30 Error: 	 89.50390625
+Step 31 Error: 	 85.0679092407
+Step 32 Error: 	 112.444473267
+Step 33 Error: 	 80.7678909302
+Step 34 Error: 	 103.189819336
+Step 35 Error: 	 116.607467651
+Step 36 Error: 	 81.2140045166
+Step 37 Error: 	 86.3271636963
+Step 38 Error: 	 84.4835128784
+Step 39 Error: 	 96.8617477417
+Step 40 Error: 	 84.0963745117
+Step 41 Error: 	 75.1465911865
+Step 42 Error: 	 94.6075744629
+Step 43 Error: 	 81.9455718994
+Step 44 Error: 	 76.5978622437
+Step 45 Error: 	 98.9244384766
+Step 46 Error: 	 82.7605285645
+Step 47 Error: 	 74.3256149292
+Step 48 Error: 	 71.1407852173
+Step 49 Error: 	 82.4838256836
+Step 50 Error: 	 92.1664428711
+Step 51 Error: 	 82.7016296387
+Step 52 Error: 	 103.597198486
+Step 53 Error: 	 86.7250595093
+Step 54 Error: 	 100.374664307
+Step 55 Error: 	 75.909362793
+Step 56 Error: 	 69.4919662476
+Step 57 Error: 	 91.0180664062
+Step 58 Error: 	 81.371307373
+Step 59 Error: 	 73.6163330078
+Step 60 Error: 	 87.219329834
+Step 61 Error: 	 75.9653015137
+Step 62 Error: 	 70.8735961914
+Step 63 Error: 	 89.2863769531
+Step 64 Error: 	 71.7886886597
+Step 65 Error: 	 80.9097900391
+Step 66 Error: 	 77.5128555298
+Step 67 Error: 	 71.308303833
+Step 68 Error: 	 73.2599182129
+Step 69 Error: 	 82.0979156494
+Step 70 Error: 	 67.1416778564
+Step 71 Error: 	 67.9265670776
+Step 72 Error: 	 66.5642776489
+Step 73 Error: 	 73.7194671631
+Step 74 Error: 	 77.364654541
+Step 75 Error: 	 70.6909790039
+Step 76 Error: 	 69.7449035645
+Step 77 Error: 	 78.8911209106
+Step 78 Error: 	 81.3435821533
+Step 79 Error: 	 64.4706420898
+Step 80 Error: 	 73.7679748535
+Step 81 Error: 	 76.4234008789
+Step 82 Error: 	 70.4004974365
+Step 83 Error: 	 76.1881790161
+Step 84 Error: 	 75.0395202637
+Step 85 Error: 	 61.9978866577
+Step 86 Error: 	 67.6078491211
+Step 87 Error: 	 67.4532775879
+Step 88 Error: 	 65.1849060059
+Step 89 Error: 	 62.1976737976
+Step 90 Error: 	 72.1221923828
+Step 91 Error: 	 66.5180358887
+Step 92 Error: 	 78.7914657593
+Step 93 Error: 	 63.6632995605
+Step 94 Error: 	 76.2177200317
+Step 95 Error: 	 92.2988433838
+Step 96 Error: 	 73.3255233765
+Step 97 Error: 	 64.9298706055
+Step 98 Error: 	 69.1463775635
+Step 99 Error: 	 80.0132827759
+LSTM model finished training.
+Model saved in file: ./tmp/model.ckpt
+Evaluate LSTM cost tensors...
