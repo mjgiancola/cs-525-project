@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import time
 
-from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC
+from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC, NN_PROBLEMS
 
 # =================================================================================================
 # Globals
@@ -181,15 +181,12 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
 # =================================================================================================
 
 
-def main(save_model=True):
+def main():
     print('Initializing...')
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
-    # saver = tf.train.Saver()
-
     print('Assemble computation graph...')
-    # TODO change to f_neural
     problem = PROBLEM_NEURAL
     print('Work on problem {}'.format(problem.name))
     batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='batch_x')
@@ -204,27 +201,39 @@ def main(save_model=True):
     display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1, batch=batch)
 
     saver = tf.train.Saver()
-
-    if save_model:
-        train_LSTM(sess, sum_losses, apply_update, batch)
-        print("LSTM model finished training.")
-        save_path = saver.save(sess, "./tmp/model.ckpt")
-        print("Model saved in file: %s" % save_path)
-
-    else:
-        print("Restoring model from memory...")
-        saver.restore(sess, "./tmp/model.ckpt")
-        print("Model restored.")
+    train_LSTM(sess, sum_losses, apply_update, batch)
+    print("LSTM model finished training.")
+    save_path = saver.save(sess, "./tmp/model.ckpt")
+    print("Model saved in file: %s" % save_path)
 
     display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
 
 
-def big_test():
-    # TODO like main except use tf.reset_default_graph() after every iteration
-    # load model from memory
-    pass
-    # evaluate
+# def big_test():
+#     # evaluate
+#     print('Initializing...')
+#     sess = tf.InteractiveSession()
+#     sess.run(tf.global_variables_initializer())
+
+#     saver = tf.train.Saver()
+#     print("Restoring model from memory...")
+#     saver.restore(sess, "./tmp/model.ckpt")
+#     print("Model restored.")
+
+#     for problem in NN_PROBLEMS:
+#         print('Test on problem {}'.format(problem.name))
+#         batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='batch_x')
+#         batch_y = tf.placeholder(tf.float32, shape=[None, 10], name ='batch_y')
+#         batch = (batch_x, batch_y)
+#         sgd_losses = learn(g_sgd, problem, batch)
+#         rms_losses = learn(g_rms, problem, batch)
+#         rnn_losses = learn(g_rnn, problem, batch)
+#         sum_losses = tf.reduce_sum(rnn_losses)
+#         apply_update = optimize_step(sum_losses)
+#         display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
+#         tf.reset_default_graph() # do this every time to prevent side effect issues
     
 
 if __name__ == '__main__':
     main()
+    # big_test()
