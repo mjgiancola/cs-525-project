@@ -1,6 +1,5 @@
 """
     runner.py
-    Nicholas S. Bradford
     30 April 2017
 
 """
@@ -20,9 +19,6 @@ from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC
 # Import MNIST data set
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-
-NEW_MODEL = 1
-
 
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
@@ -185,7 +181,7 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
 # =================================================================================================
 
 
-def main():
+def main(save_model=True):
     print('Initializing...')
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
@@ -207,15 +203,17 @@ def main():
     apply_update = optimize_step(sum_losses)
     display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1, batch=batch)
 
-    if NEW_MODEL:
+    saver = tf.train.Saver()
+
+    if save_model:
         train_LSTM(sess, sum_losses, apply_update, batch)
         print("LSTM model finished training.")
-        # save_path = saver.save(ses, "/tmp/model.ckpt")
-        # print("Model saved in file: %s" % save_path)
+        save_path = saver.save(sess, "./tmp/model.ckpt")
+        print("Model saved in file: %s" % save_path)
 
     else:
         print("Restoring model from memory...")
-        # saver.restore(sess, "/tmp/model.ckpt")
+        saver.restore(sess, "./tmp/model.ckpt")
         print("Model restored.")
 
     display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
