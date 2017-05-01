@@ -20,7 +20,7 @@ import time
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
-
+NEW_MODEL = 1
 
 
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
@@ -205,7 +205,7 @@ def train_LSTM(sess, sum_losses, apply_update):
     print('Train LSTM...')
     sess.run(tf.global_variables_initializer())
     ave = 0
-    for i in xrange(100):
+    for i in xrange(10):
         err, _ = sess.run([sum_losses, apply_update],
             feed_dict= assemble_feed_dict())
         ave += err
@@ -255,19 +255,35 @@ def display_base_optimizers(sess, loss_list, n_times):
 
 
 def main():
+
     print('Initializing...')
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
+
+    # saver = tf.train.Saver()
+
     print('Assemble computation graph...')
     # TODO change to f_neural
     problem = f_neural
     sgd_losses = learn(g_sgd, f_neural)
     rms_losses = learn(g_rms, f_neural)
     rnn_losses = learn(g_rnn, f_neural)
+
     sum_losses = tf.reduce_sum(rnn_losses)
     apply_update = optimize_step(sum_losses)
     display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1)
-    train_LSTM(sess, sum_losses, apply_update)
+
+    if NEW_MODEL:
+        train_LSTM(sess, sum_losses, apply_update)
+        print("LSTM model finished training.")
+        # save_path = saver.save(ses, "/tmp/model.ckpt")
+        print("Model saved in file: %s" % save_path)
+
+    else:
+        print("Restoring model from memory...")
+        # saver.restore(sess, "/tmp/model.ckpt")
+        print("Model restored.")
+
     display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1)
 
 
