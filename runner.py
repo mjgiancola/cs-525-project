@@ -135,7 +135,7 @@ def optimize_step(loss):
         Returns:
             (tf.Operation) ADAM optimization step for the LSTM
     """
-    optimizer = tf.train.AdamOptimizer(0.0001) # learning rate
+    optimizer = tf.train.AdamOptimizer(0.001) # learning rate
     gradients, v = zip(*optimizer.compute_gradients(loss))
     gradients, _ = tf.clip_by_global_norm(gradients, 1.) # important because some values are large
     return optimizer.apply_gradients(zip(gradients, v))
@@ -203,7 +203,7 @@ def main():
     sess.run(tf.global_variables_initializer())
 
     print('Assemble computation graph...')
-    problem = PROBLEM_NEURAL
+    problem = PROBLEM_QUADRATIC
     print('Work on problem {}'.format(problem.name))
     batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='batch_x')
     batch_y = tf.placeholder(tf.float32, shape=[None, 10], name ='batch_y')
@@ -221,12 +221,12 @@ def main():
     if 1:
         train_LSTM(sess, sum_losses, apply_update, batch)
         print("LSTM model finished training.")
-        save_path = saver.save(sess, "./tmp/model.ckpt",
+        save_path = saver.save(sess, "./tmp/100_steps_0001_model.ckpt",
             lstm_variables)
         print("Model saved in file: %s" % save_path)
     else:
         print("Restoring model from memory...")
-        saver.restore(sess, "./tmp/model.ckpt")
+        saver.restore(sess, "./tmp/100_steps_0001_model.ckpt")
         print("Model restored.")
 
     evaluate_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)

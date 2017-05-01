@@ -86,6 +86,7 @@ def f_quadratic(x, batch=None):
         Returns:
             (tf.Tensor): the cost (which we are trying to minimize)
     """
+    scale = tf.random_uniform([10], 0.5, 1.5)
     x = scale * x
     return tf.reduce_sum(x*x)
 
