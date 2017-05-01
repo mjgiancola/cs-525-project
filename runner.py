@@ -8,6 +8,7 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import time
 
@@ -204,12 +205,12 @@ def train_LSTM(sess, sum_losses, apply_update):
     print('Train LSTM...')
     sess.run(tf.global_variables_initializer())
     ave = 0
-    for i in xrange(3001):
+    for i in xrange(100):
         err, _ = sess.run([sum_losses, apply_update],
             feed_dict= assemble_feed_dict())
         ave += err
-        if i % 1000 == 0:
-            print(ave / 1000 if i!=0 else ave)
+        if i % 10 == 0:
+            print(ave / 10 if i!=0 else ave)
             ave = 0
 
 
@@ -228,7 +229,7 @@ def display_LSTM(sess, loss_list, n_times):
         p3, = plt.plot(x, rnn_1, label='RNN')
         plt.legend(handles=[p1, p2, p3])
         plt.title('Losses')
-        plt.show()
+        # plt.show()
         now = time.strftime("%H%M%S")
         plt.savefig('./images/lstm_result_' + now)
 
@@ -244,7 +245,7 @@ def display_base_optimizers(sess, loss_list, n_times):
         p2, = plt.plot(x, rms_1, label='RMS')
         plt.legend(handles=[p1,p2])
         plt.title('Losses')
-        plt.show()
+        # plt.show()
         now = time.strftime("%H%M%S")
         plt.savefig('./images/base_result_' + now)
 
