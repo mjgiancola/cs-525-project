@@ -23,7 +23,7 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
 TRAINING_STEPS = 20 # 100 in the paper ?
-TRAIN_LSTM_STEPS = 100
+TRAIN_LSTM_STEPS = 5
 
 # LSTM params
 NUM_LAYERS = 2
@@ -32,16 +32,21 @@ STATE_SIZE = 20 # n of hidden units
 SIZE_INPUT = 784
 SIZE_OUTPUT = 10
 
+lstm_variables = None
+
 # =================================================================================================
 
 
 def init_LSTM():
-    # These lines were changed from the original, bc the original didn't compile...
-    cell = tf.contrib.rnn.MultiRNNCell( [tf.contrib.rnn.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
-    cell = tf.contrib.rnn.InputProjectionWrapper(cell, STATE_SIZE)
-    cell = tf.contrib.rnn.OutputProjectionWrapper(cell, 1)
-    cell = tf.make_template('cell', cell) # wraps cell function so it does variable sharing
-    return cell
+    with tf.variable_scope("LSTM") as vs:
+        # These lines were changed from the original, bc the original didn't compile...
+        cell = tf.contrib.rnn.MultiRNNCell( [tf.contrib.rnn.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
+        cell = tf.contrib.rnn.InputProjectionWrapper(cell, STATE_SIZE)
+        cell = tf.contrib.rnn.OutputProjectionWrapper(cell, 1)
+        cell = tf.make_template('cell', cell) # wraps cell function so it does variable sharing
+        print(vs.name)
+        lstm_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=vs.name)
+        return cell
 
 def g_sgd(gradients, state, DIMS, learning_rate = 0.1):
     """ Optimizer: stochastic gradient descent. """
@@ -160,7 +165,7 @@ def evaluate_LSTM(sess, loss_list, n_times, batch):
         now = time.strftime("%H%M%S")
         plt.savefig('./images/lstm_result_' + now)
         # plt.show()
-        plot.clf()
+        plt.clf()
 
 
 def display_base_optimizers(sess, loss_list, n_times, batch):
@@ -203,10 +208,17 @@ def main():
     display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1, batch=batch)
 
     saver = tf.train.Saver()
-    train_LSTM(sess, sum_losses, apply_update, batch)
-    print("LSTM model finished training.")
-    save_path = saver.save(sess, "./tmp/model.ckpt")
-    print("Model saved in file: %s" % save_path)
+    
+    if 0:
+        train_LSTM(sess, sum_losses, apply_update, batch)
+        print("LSTM model finished training.")
+        save_path = saver.save(sess, "./tmp/model.ckpt",
+            lstm_variables)
+        print("Model saved in file: %s" % save_path)
+    else:
+        print("Restoring model from memory...")
+        saver.restore(sess, "./tmp/model.ckpt")
+        print("Model restored.")
 
     evaluate_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
 
