@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import time
 
-from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC, NN_PROBLEMS
+from metalearn.network import PROBLEM_NEURAL, PROBLEM_QUADRATIC, NN_PROBLEMS, PROBLEM_NEURAL_SIGMOID, PROBLEM_NEURAL_TANH
 
 # =================================================================================================
 # Globals
@@ -203,7 +203,7 @@ def main():
     sess.run(tf.global_variables_initializer())
 
     print('Assemble computation graph...')
-    problem = PROBLEM_QUADRATIC
+    problem = PROBLEM_NEURAL_SIGMOID
     print('Work on problem {}'.format(problem.name))
     batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='batch_x')
     batch_y = tf.placeholder(tf.float32, shape=[None, 10], name ='batch_y')
@@ -218,7 +218,7 @@ def main():
 
     saver = tf.train.Saver()
     
-    if 1:
+    if 0:
         train_LSTM(sess, sum_losses, apply_update, batch)
         print("LSTM model finished training.")
         save_path = saver.save(sess, "./tmp/100_steps_0001_model.ckpt",
