@@ -9,6 +9,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib
 import matplotlib.pyplot as plt
+import time
 
 
 # =================================================================================================
@@ -18,8 +19,11 @@ import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
-DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
-scale = tf.random_uniform([DIMS], 0.5, 1.5)
+
+
+
+# DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
+# scale = tf.random_uniform([DIMS], 0.5, 1.5)
 TRAINING_STEPS = 20 # 100 in the paper ?
 
 # LSTM params
@@ -29,52 +33,54 @@ STATE_SIZE = 20 # n of hidden units
 # =================================================================================================
 # Neural network problem 
 
-SIZE_H1 = 300
-SIZE_H2 = 40
-SIZE_H3 = 20
-SIZE_OUTPUT = 10
 SIZE_INPUT = 784
+SIZE_H1 = 200
+SIZE_OUTPUT = 10
 
 LEN_W1 = SIZE_INPUT * SIZE_H1
 LEN_B1 = SIZE_H1
-LEN_W2 = SIZE_H1 * SIZE_H2
-LEN_B2 = SIZE_H2
-LEN_W3 = SIZE_H2 * SIZE_OUTPUT
-LEN_B3 = SIZE_OUTPUT
+LEN_W2 = SIZE_H1 * SIZE_OUTPUT
+LEN_B2 = SIZE_OUTPUT
+DIMS = LEN_W1 + LEN_B1 + LEN_W2 + LEN_B2 
 
-def f_neural(x):
+# TODO need to set these equal to the MNIST training batches
+batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='Batch')
+y_ = tf.placeholder(tf.float32, shape=[None, 10], name ='y')
+
+
+def f_neural(weights):
     """ This model has ~98.32% accuracy on MNIST.
         Args:
-            x (tf.Tensor): params of the optimizee network (weights and biases)
+            weights (tf.Tensor): params of the optimizee network (weights and biases)
+            weights = [W1, b1, W2, b2, W3, b3]
         Returns:
             (tf.Tensor): the cost (which we are trying to minimize) = 1/ % accurate on train set
     """
 
-    # TODO need to set these equal to the MNIST training batches
-    NEW_x = tf.placeholder(tf.float32, [None, SIZE_INPUT])
-    y_ = tf.placeholder(tf.float32, shape=[None, 10])
+    # # TODO need to set these equal to the MNIST training batches
+    # batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='Batch x')
+    # y_ = tf.placeholder(tf.float32, shape=[None, 10], name ='y')
 
-    # TODO unpack 'x' into these
-    W_1 = None
-    b_1 = None
-    W_2 = None
-    b_2 = None
-    W_3 = None
-    b_3 = None
+    # TODO unpack 'weights' into these
+    W1 = tf.reshape(tf.slice(weights, [0], [LEN_W1]), [SIZE_INPUT, SIZE_H1])
+    b1 = tf.reshape(tf.slice(weights, [LEN_W1], [LEN_B1]), [SIZE_H1])
+    W2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1], [LEN_W2]), [SIZE_H1,SIZE_OUTPUT])
+    b2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1+LEN_W2], [LEN_B2]), [SIZE_OUTPUT])
 
-    h1 = tf.nn.relu(tf.matmul(x, W1) + b1)
-    h2 = tf.nn.relu(tf.matmul(h1, W2) + b2)
-    yhat = tf.matmul(h2, W3) + b3
+    h1 = tf.nn.relu(tf.matmul(batch_x, W1) + b1)
+    # h2 = tf.nn.relu(tf.matmul(h1, W2) + b2)
+    yhat = tf.matmul(h1, W2) + b2
 
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=yhat))
-    correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(y_,1))
+    # correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(y_,1))
+    return cross_entropy
+
 
     # TODO this might have to be modified to correctly reside in the TF graph;
     # we need to replace batch[0] with some large piece of MNIST (the entire train set?) or avg
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    accuracy_eval = accuracy.eval(feed_dict={x:batch[0], y_: batch[1]})
-    return 1 / accuracy_eval # we are returning a value to minimize
-
+    # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    # accuracy_eval = accuracy.eval(feed_dict={x:batch[0], y_: batch[1]})
+    # return 1 / accuracy_eval # we are returning a value to minimize
 
 
 # =================================================================================================
@@ -168,6 +174,15 @@ def learn(optimizer, problem):
         x += update
     return losses
 
+def assemble_feed_dict():
+
+    BATCH_SIZE = 128
+    batch_xs, batch_ys = mnist.train.next_batch(BATCH_SIZE)
+    return {
+        batch_x: batch_xs,
+        y_: batch_ys
+    }
+
 
 def optimize_step(loss):
     """ Returns an ADAM update step to our LSTM on a given loss function.
@@ -189,12 +204,13 @@ def train_LSTM(sess, sum_losses, apply_update):
     print('Train LSTM...')
     sess.run(tf.global_variables_initializer())
     ave = 0
-    for i in xrange(3000):
-        err, _ = sess.run([sum_losses, apply_update])
+    for i in xrange(3001):
+        err, _ = sess.run([sum_losses, apply_update],
+            feed_dict= assemble_feed_dict())
         ave += err
         if i % 1000 == 0:
             print(ave / 1000 if i!=0 else ave)
-    print ave / 1000 # Why divided by 1000?
+            ave = 0
 
 
 # =================================================================================================
@@ -206,13 +222,15 @@ def display_LSTM(sess, loss_list, n_times):
     assert len(loss_list) == 3; 'loss_list should have 3 components'
     x = np.arange(TRAINING_STEPS)
     for _ in range(n_times):
-        sgd_1, rms_1, rnn_1 = sess.run(loss_list) # evaluate loss tensors now that LSTM is trained
+        sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict = assemble_feed_dict()) # evaluate loss tensors now that LSTM is trained
         p1, = plt.plot(x, sgd_1, label='SGD')
         p2, = plt.plot(x, rms_1, label='RMS')
         p3, = plt.plot(x, rnn_1, label='RNN')
         plt.legend(handles=[p1, p2, p3])
         plt.title('Losses')
         plt.show()
+        now = time.strftime("%H%M%S")
+        plt.savefig('./images/lstm_result_' + now)
 
 
 def display_base_optimizers(sess, loss_list, n_times):
@@ -221,12 +239,16 @@ def display_base_optimizers(sess, loss_list, n_times):
     assert len(loss_list) == 2; 'loss_list should have 2 components'
     x = np.arange(TRAINING_STEPS)
     for _ in xrange(n_times):
-        sgd_1, rms_1 = sess.run(loss_list) # evaluate loss tensors
+        sgd_1, rms_1 = sess.run(loss_list, feed_dict = assemble_feed_dict()) # evaluate loss tensors
         p1, = plt.plot(x, sgd_1, label='SGD')
         p2, = plt.plot(x, rms_1, label='RMS')
         plt.legend(handles=[p1,p2])
         plt.title('Losses')
         plt.show()
+        now = time.strftime("%H%M%S")
+        plt.savefig('./images/base_result_' + now)
+
+
 
 # =================================================================================================
 
@@ -237,13 +259,13 @@ def main():
     sess.run(tf.global_variables_initializer())
     print('Assemble computation graph...')
     # TODO change to f_neural
-    problem = f_quadratic
-    sgd_losses = learn(g_sgd, f_quadratic)
-    rms_losses = learn(g_rms, f_quadratic)
-    rnn_losses = learn(g_rnn, f_quadratic)
+    problem = f_neural
+    sgd_losses = learn(g_sgd, f_neural)
+    rms_losses = learn(g_rms, f_neural)
+    rnn_losses = learn(g_rnn, f_neural)
     sum_losses = tf.reduce_sum(rnn_losses)
     apply_update = optimize_step(sum_losses)
-    # display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1)
+    display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1)
     train_LSTM(sess, sum_losses, apply_update)
     display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1)
 
