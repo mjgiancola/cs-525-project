@@ -23,6 +23,13 @@ def get_neural_dims(SIZE_INPUT, SIZE_OUTPUT, SIZE_H1):
 NEURAL_DIMS = get_neural_dims(SIZE_INPUT=784, SIZE_OUTPUT=10, SIZE_H1=20)
 NEURAL_FACE_DIMS = get_neural_dims(SIZE_INPUT=576, SIZE_OUTPUT=1, SIZE_H1=20)
 NEURAL_DIMS_200UNITS = get_neural_dims(SIZE_INPUT=784, SIZE_OUTPUT=10, SIZE_H1=200)
+
+accuracy = 3
+
+def get_accuracy():
+    global accuracy
+    return accuracy
+
 # =================================================================================================
 # Neural network problem 
 
@@ -35,6 +42,7 @@ def NEURAL_BASE(weights, batch, activation, SIZE_H1=20, SIZE_INPUT=784, SIZE_OUT
         Returns:
             (tf.Tensor): the cost (which we are trying to minimize) = 1/ % accurate on train set
     """
+    global accuracy
     with tf.variable_scope('Optimizee_ANN'):
         
         LEN_W1 = SIZE_INPUT * SIZE_H1
@@ -50,14 +58,14 @@ def NEURAL_BASE(weights, batch, activation, SIZE_H1=20, SIZE_INPUT=784, SIZE_OUT
         b2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1+LEN_W2], [LEN_B2]), [SIZE_OUTPUT], name='b1')
         h1 = activation(tf.matmul(batch_x, W1) + b1)
         yhat = tf.matmul(h1, W2) + b2
-    with tf.variable_scope('Optimizee_Cost'):
-        cross_entropy = tf.reduce_mean(COST(labels=batch_y, logits=yhat))
-        # tf.scalar_summary('optimizee cross entropy', cross_entropy)
-    return cross_entropy
 
-    # correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(batch_y,1))
-    # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    return cross_entropy #, accuracy
+        correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(batch_y,1))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    # with tf.variable_scope('Optimizee_Cost'):
+        cross_entropy = tf.reduce_mean(COST(labels=batch_y, logits=yhat))
+            # tf.scalar_summary('optimizee cross entropy', cross_entropy)
+        return cross_entropy
 
 
 # tf.sigmoid, tf.tanh, tf.nn.elu, tf.
