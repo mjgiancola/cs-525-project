@@ -219,5 +219,12 @@ def main(save_model=True):
     display_LSTM(sess, loss_list=[sgd_losses, rms_losses, rnn_losses], n_times=1, batch=batch)
 
 
+def big_test():
+    # TODO like main except use tf.reset_default_graph() after every iteration
+    # load model from memory
+    pass
+    # evaluate
+    
+
 if __name__ == '__main__':
     main()

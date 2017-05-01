@@ -10,17 +10,23 @@
 
 """
 
+import tensorflow as tf
 
 SIZE_INPUT = 784
 SIZE_OUTPUT = 10
 
-import tensorflow as tf
+SIZE_H1 = 200
+LEN_W1 = SIZE_INPUT * SIZE_H1
+LEN_B1 = SIZE_H1
+LEN_W2 = SIZE_H1 * SIZE_OUTPUT
+LEN_B2 = SIZE_OUTPUT
+NEURAL_DIMS = LEN_W1 + LEN_B1 + LEN_W2 + LEN_B2 
 
 
 # =================================================================================================
 # Neural network problem 
 
-def f_neural(weights, batch):
+def NEURAL_BASE(weights, batch, activation):
     """ This model has ~98.32% accuracy on MNIST.
         Args:
             weights (tf.Tensor): params of the optimizee network (weights and biases)
@@ -40,7 +46,7 @@ def f_neural(weights, batch):
     b1 = tf.reshape(tf.slice(weights, [LEN_W1], [LEN_B1]), [SIZE_H1])
     W2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1], [LEN_W2]), [SIZE_H1,SIZE_OUTPUT])
     b2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1+LEN_W2], [LEN_B2]), [SIZE_OUTPUT])
-    h1 = tf.nn.relu(tf.matmul(batch_x, W1) + b1)
+    h1 = activation(tf.matmul(batch_x, W1) + b1)
     yhat = tf.matmul(h1, W2) + b2
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=batch_y, logits=yhat))
     return cross_entropy
@@ -49,6 +55,26 @@ def f_neural(weights, batch):
     # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     # accuracy_eval = accuracy.eval(feed_dict={x:batch[0], y_: batch[1]})
     # return 1 / accuracy_eval # we are returning a value to minimize
+
+
+# tf.sigmoid, tf.tanh, tf.nn.elu, tf.
+
+def f_neural(weights, batch):
+    return NEURAL_BASE(weights, batch, activation=tf.nn.relu)
+
+def f_neural_elu(weights, batch):
+    return NEURAL_BASE(weights, batch, activation=tf.nn.elu)
+
+def f_neural_sigmoid(weights, batch):
+    return NEURAL_BASE(weights, batch, activation=tf.sigmoid)
+
+def f_neural_tanh(weights, batch):
+    return NEURAL_BASE(weights, batch, activation=tf.tanh)
+
+# def f_neural_twohidden(weights, batch):
+# def f_neural_200units(weights, batch):
+
+
 
 
 # =================================================================================================
@@ -73,12 +99,20 @@ class Problem(object):
         self.loss_fcn = loss_fcn
         self.DIMS = DIMS
 
-SIZE_H1 = 200
-LEN_W1 = SIZE_INPUT * SIZE_H1
-LEN_B1 = SIZE_H1
-LEN_W2 = SIZE_H1 * SIZE_OUTPUT
-LEN_B2 = SIZE_OUTPUT
-NEURAL_DIMS = LEN_W1 + LEN_B1 + LEN_W2 + LEN_B2 
 
 PROBLEM_NEURAL = Problem('NeuralNet', f_neural, NEURAL_DIMS)
 PROBLEM_QUADRATIC = Problem('Quadratic', f_quadratic, 10)
+# PROBLEM_NEURAL_ELU = Problem('NN_ELU', f_neural_elu, NEURAL_DIMS)
+# PROBLEM_NEURAL_SIGMOID = Problem('NN_SIGMOID', f_neural_sigmoid, NEURAL_DIMS)
+# PROBLEM_NEURAL_TANH = Problem('NN_TANH', f_neural_tanh, NEURAL_DIMS)
+# PROBLEM_NEURAL_TWOHIDDEN = Problem('NN_TWOHIDDEN', f_neural_twohidden, NEURAL_DIMS_TWOHIDDEN)
+# PROBLEM_NEURAL_200UNITS = Problem('NN_200UNITS', f_neural_200units, NEURAL_DIMS_200UNITS)
+
+NN_PROBLEMS = [
+    PROBLEM_NEURAL,
+    # PROBLEM_NEURAL_ELU,
+    # PROBLEM_NEURAL_SIGMOID,
+    # PROBLEM_NEURAL_TANH,
+    # PROBLEM_NEURAL_TWOHIDDEN,
+    # PROBLEM_NEURAL_200UNITS,
+]
