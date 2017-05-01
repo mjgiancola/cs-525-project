@@ -49,12 +49,10 @@ def NEURAL_BASE(weights, batch, activation):
     h1 = activation(tf.matmul(batch_x, W1) + b1)
     yhat = tf.matmul(h1, W2) + b2
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=batch_y, logits=yhat))
-    return cross_entropy
 
-    # correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(y_,1))
+    # correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(batch_y,1))
     # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    # accuracy_eval = accuracy.eval(feed_dict={x:batch[0], y_: batch[1]})
-    # return 1 / accuracy_eval # we are returning a value to minimize
+    return cross_entropy #, accuracy
 
 
 # tf.sigmoid, tf.tanh, tf.nn.elu, tf.

@@ -23,7 +23,7 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
 TRAINING_STEPS = 20 # 100 in the paper ?
-TRAIN_LSTM_STEPS = 5
+TRAIN_LSTM_STEPS = 100
 
 # LSTM params
 NUM_LAYERS = 2
@@ -107,7 +107,7 @@ def learn_optimizee(optimizer, problem, batch):
     return losses
 
 
-def assemble_feed_dict(batch):
+def assemble_train_feed_dict(batch):
     batch_x, batch_y = batch[0], batch[1]
     BATCH_SIZE = 128
     batch_xs, batch_ys = mnist.train.next_batch(BATCH_SIZE)
@@ -115,6 +115,15 @@ def assemble_feed_dict(batch):
         batch_x: batch_xs,
         batch_y: batch_ys
     }
+
+# Not used for now
+def evaluate_accuracy_with_validation_set(sess, accuracy, batch):
+    batch_x, batch_y = batch[0], batch[1]
+    batch_xs, batch_ys = mnist.validation.images, mnist.validation.labels
+    measured_accuracy = sess.run(accuracy, feed_dict = {
+        batch_x: batch_xs,
+        batch_y: batch_ys })
+    return measured_accuracy
 
 
 def optimize_step(loss):
@@ -139,7 +148,7 @@ def train_LSTM(sess, sum_losses, apply_update, batch):
     # ave = 0
     for i in xrange(TRAIN_LSTM_STEPS):
         err, _ = sess.run([sum_losses, apply_update],
-            feed_dict= assemble_feed_dict(batch))
+            feed_dict= assemble_train_feed_dict(batch))
         print('Step {} Error: \t {}'.format(i, err))
         # ave += err
         # if i % 10 == 0:
@@ -156,10 +165,10 @@ def evaluate_LSTM(sess, loss_list, n_times, batch):
     assert len(loss_list) == 3; 'loss_list should have 3 components'
     x = np.arange(TRAINING_STEPS)
     for _ in range(n_times):
-        sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict=assemble_feed_dict(batch))
-        p1, = plt.plot(x, sgd_1, label='SGD')
-        p2, = plt.plot(x, rms_1, label='RMS')
-        p3, = plt.plot(x, rnn_1, label='RNN')
+        sgd_1, rms_1, rnn_1 = sess.run(loss_list, feed_dict=assemble_train_feed_dict(batch))
+        p1, = plt.plot(x, np.log10(sgd_1), label='SGD')
+        p2, = plt.plot(x, np.log10(rms_1), label='RMS')
+        p3, = plt.plot(x, np.log10(rnn_1), label='RNN')
         plt.legend(handles=[p1, p2, p3])
         plt.title('Losses')
         now = time.strftime("%H%M%S")
@@ -174,9 +183,9 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
     assert len(loss_list) == 2; 'loss_list should have 2 components'
     x = np.arange(TRAINING_STEPS)
     for _ in xrange(n_times):
-        sgd_1, rms_1 = sess.run(loss_list, feed_dict=assemble_feed_dict(batch)) # evaluate loss tensors
-        p1, = plt.plot(x, sgd_1, label='SGD')
-        p2, = plt.plot(x, rms_1, label='RMS')
+        sgd_1, rms_1 = sess.run(loss_list, feed_dict=assemble_train_feed_dict(batch)) # evaluate loss tensors
+        p1, = plt.plot(x, np.log10(sgd_1), label='SGD')
+        p2, = plt.plot(x, np.log10(rms_1), label='RMS')
         plt.legend(handles=[p1,p2])
         plt.title('Losses')
         now = time.strftime("%H%M%S")
@@ -209,7 +218,7 @@ def main():
 
     saver = tf.train.Saver()
     
-    if 0:
+    if 1:
         train_LSTM(sess, sum_losses, apply_update, batch)
         print("LSTM model finished training.")
         save_path = saver.save(sess, "./tmp/model.ckpt",
