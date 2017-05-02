@@ -1,12 +1,6 @@
 """
     network.py
-    Nicholas S. Bradford
     30 April 2017
-
-    Train a 2-layer neural network to classify images of hand-written digits from MNIST dataset.
-    Implement gradient descent to minimize the cross-entropy loss function.
-    Because there are 10 different outputs, there are 10 weights vectors;
-        thus, the weight matrix is 784 x 10.
 
 """
 

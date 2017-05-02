@@ -21,11 +21,11 @@ from metalearn.network import get_accuracy
 print('Loading training data...')
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-prefix = 'smile_data/'
-trainingFaces = np.load(prefix + "trainingFaces.npy")
-trainingLabels = np.load(prefix + "trainingLabels.npy")
-testingFaces = np.load(prefix + "testingFaces.npy")
-testingLabels = np.load(prefix + "testingLabels.npy")
+# prefix = 'smile_data/'
+# trainingFaces = np.load(prefix + "trainingFaces.npy")
+# trainingLabels = np.load(prefix + "trainingLabels.npy")
+# testingFaces = np.load(prefix + "testingFaces.npy")
+# testingLabels = np.load(prefix + "testingLabels.npy")
 
 # DIMS = 10 # dimensionality of cost function space; equal to number of optimizee params
 # scale = tf.random_uniform([DIMS], 0.5, 1.5)
@@ -44,12 +44,10 @@ lstm_variables = None
 
 def init_LSTM():
     with tf.variable_scope("LSTM") as vs:
-        # These lines were changed from the original, bc the original didn't compile...
         cell = tf.contrib.rnn.MultiRNNCell( [tf.contrib.rnn.LSTMCell(STATE_SIZE) for _ in xrange(NUM_LAYERS)] )
         cell = tf.contrib.rnn.InputProjectionWrapper(cell, STATE_SIZE)
         cell = tf.contrib.rnn.OutputProjectionWrapper(cell, 1)
         cell = tf.make_template('cell', cell) # wraps cell function so it does variable sharing
-        # print(vs.name)
         lstm_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=vs.name)
         return cell
 
@@ -78,15 +76,6 @@ def g_rnn(gradients, state, DIMS):
     return tf.squeeze(update, axis=[1]), state # No idea what squeeze does...
 
 # =================================================================================================
-
-def weight_variable(shape):
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
-
-
-def bias_variable(shape):
-    initial = tf.constant(0.1, shape=shape)
-    return tf.Variable(initial)
 
 
 def initialize_x(DIMS):
@@ -118,14 +107,14 @@ def shuffleArraysInUnison(x, y):
     return x[p, :], y[p]
 
 
-def get_train_smile(batch_size):
-    x, y = shuffleArraysInUnison(trainingFaces, trainingLabels)
-    return x[:batch_size, :], y[:batch_size]
+# def get_train_smile(batch_size):
+#     x, y = shuffleArraysInUnison(trainingFaces, trainingLabels)
+#     return x[:batch_size, :], y[:batch_size]
 
 
-def get_test_smile(batch_size):
-    x, y = shuffleArraysInUnison(testingFaces, testingLabels)
-    return x[:batch_size, :], y[:batch_size]
+# def get_test_smile(batch_size):
+#     x, y = shuffleArraysInUnison(testingFaces, testingLabels)
+#     return x[:batch_size, :], y[:batch_size]
 
 
 def assemble_batch_template(batch, fcn):
@@ -137,14 +126,13 @@ def assemble_batch_template(batch, fcn):
         batch_y: batch_ys
     }
 
-# Not used for now
-def evaluate_accuracy_with_validation_set(sess, accuracy, batch):
-    batch_x, batch_y = batch[0], batch[1]
-    batch_xs, batch_ys = mnist.validation.images, mnist.validation.labels
-    measured_accuracy = sess.run(accuracy, feed_dict = {
-        batch_x: batch_xs,
-        batch_y: batch_ys })
-    return measured_accuracy
+# def evaluate_accuracy_with_validation_set(sess, accuracy, batch):
+#     batch_x, batch_y = batch[0], batch[1]
+#     batch_xs, batch_ys = mnist.validation.images, mnist.validation.labels
+#     measured_accuracy = sess.run(accuracy, feed_dict = {
+#         batch_x: batch_xs,
+#         batch_y: batch_ys })
+#     return measured_accuracy
 
 
 def assemble_train_mnist(batch):
@@ -153,21 +141,11 @@ def assemble_train_mnist(batch):
 def assemble_test_mnist(batch):
     return assemble_batch_template(batch, mnist.test.next_batch)
 
-def assemble_train_smile(batch):
-    return assemble_batch_template(batch, get_train_smile)
+# def assemble_train_smile(batch):
+#     return assemble_batch_template(batch, get_train_smile)
 
-def assemble_test_smile(batch):
-    return assemble_batch_template(batch, get_test_smile)
-
-
-# def assemble_test_mnist(batch):
-#     batch_x, batch_y = batch[0], batch[1]
-#     BATCH_SIZE = 128
-#     batch_xs, batch_ys = mnist.test.next_batch(BATCH_SIZE)
-#     return {
-#         batch_x: batch_xs,
-#         batch_y: batch_ys
-#     }
+# def assemble_test_smile(batch):
+#     return assemble_batch_template(batch, get_test_smile)
 
 
 def optimize_step(loss):
@@ -188,26 +166,18 @@ def optimize_step(loss):
 def train_LSTM(sess, sum_losses, apply_update, batch):
     """ Train the LSTM. """
     print('Train LSTM...')
-    # writer = tf.train.SummaryWriter('./tmp/nn_logs')
-    # merged = tf.merge_all_summaries()
-
     sess.run(tf.global_variables_initializer())
-    # ave = 0
     for i in xrange(TRAIN_LSTM_STEPS):
         err, _ = sess.run([sum_losses, apply_update],
             feed_dict= assemble_train_mnist(batch))
         print('Step {} Error: \t {}'.format(i, err))
-        # ave += err
-        # if i % 10 == 0:
-        #     print(ave / 10 if i!=0 else ave)
-        #     ave = 0
 
 
 # =================================================================================================
 # Plotting (these can be refactored into a single function)
 
 def evaluate_LSTM(sess, loss_list, n_times, batch):
-    accuracy = get_accuracy()
+    # accuracy = get_accuracy()
     """ Evaluate on the same problem. """
     print('Evaluate LSTM cost tensors...')
     assert len(loss_list) == 1; 'loss_list should have 3 components'
@@ -230,8 +200,7 @@ def evaluate_LSTM(sess, loss_list, n_times, batch):
         plt.title('Losses')
         now = time.strftime("%H%M%S")
         plt.savefig('./images/lstm_result_' + now)
-        # plt.show()
-        plt.clf()
+        plt.clf() # plt.show()
 
 
 def display_base_optimizers(sess, loss_list, n_times, batch):
@@ -247,8 +216,7 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
         plt.title('Losses')
         now = time.strftime("%H%M%S")
         plt.savefig('./images/base_result_' + now)
-        # plt.show()
-        plt.clf()
+        plt.clf() # plt.show()
 
 
 # =================================================================================================
@@ -270,13 +238,10 @@ def main():
     # This is the set of losses from training a NN using the given optimizer
     # for X number of steps
     rnn_losses = learn_optimizee(g_rnn, problem, batch)
-
     # We sum up all losses to want to converge quickly to a low loss
     sum_losses = tf.reduce_sum(rnn_losses)
-
     apply_update = optimize_step(sum_losses)
     # display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1, batch=batch)
-
     saver = tf.train.Saver()
     
     if 1:
@@ -299,12 +264,10 @@ def main():
 #     print('Initializing...')
 #     sess = tf.InteractiveSession()
 #     sess.run(tf.global_variables_initializer())
-
 #     saver = tf.train.Saver()
 #     print("Restoring model from memory...")
 #     saver.restore(sess, "./tmp/model.ckpt")
 #     print("Model restored.")
-
 #     for problem in NN_PROBLEMS:
 #         print('Test on problem {}'.format(problem.name))
 #         batch_x = tf.placeholder(tf.float32, [None, SIZE_INPUT], name='batch_x')
