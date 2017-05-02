@@ -43,29 +43,33 @@ def NEURAL_BASE(weights, batch, activation, SIZE_H1=20, SIZE_INPUT=784, SIZE_OUT
             (tf.Tensor): the cost (which we are trying to minimize) = 1/ % accurate on train set
     """
     global accuracy
-    with tf.variable_scope('Optimizee_ANN'):
-        
-        LEN_W1 = SIZE_INPUT * SIZE_H1
-        LEN_B1 = SIZE_H1
-        LEN_W2 = SIZE_H1 * SIZE_OUTPUT
-        LEN_B2 = SIZE_OUTPUT
-        DIMS = LEN_W1 + LEN_B1 + LEN_W2 + LEN_B2 
+    # with tf.variable_scope('Optimizee_ANN'):
+    
+    LEN_W1 = SIZE_INPUT * SIZE_H1
+    LEN_B1 = SIZE_H1
+    LEN_W2 = SIZE_H1 * SIZE_OUTPUT
+    LEN_B2 = SIZE_OUTPUT
+    DIMS = LEN_W1 + LEN_B1 + LEN_W2 + LEN_B2 
 
-        batch_x, batch_y = batch[0], batch[1]
-        W1 = tf.reshape(tf.slice(weights, [0], [LEN_W1]), [SIZE_INPUT, SIZE_H1], name='W1')
-        b1 = tf.reshape(tf.slice(weights, [LEN_W1], [LEN_B1]), [SIZE_H1], name='b1')
-        W2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1], [LEN_W2]), [SIZE_H1,SIZE_OUTPUT], name='W2')
-        b2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1+LEN_W2], [LEN_B2]), [SIZE_OUTPUT], name='b1')
-        h1 = activation(tf.matmul(batch_x, W1) + b1)
-        yhat = tf.matmul(h1, W2) + b2
+    batch_x, batch_y = batch[0], batch[1]
+    W1 = tf.reshape(tf.slice(weights, [0], [LEN_W1]), [SIZE_INPUT, SIZE_H1], name='W1')
+    b1 = tf.reshape(tf.slice(weights, [LEN_W1], [LEN_B1]), [SIZE_H1], name='b1')
+    W2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1], [LEN_W2]), [SIZE_H1,SIZE_OUTPUT], name='W2')
+    b2 = tf.reshape(tf.slice(weights, [LEN_W1+LEN_B1+LEN_W2], [LEN_B2]), [SIZE_OUTPUT], name='b1')
+    h1 = activation(tf.matmul(batch_x, W1) + b1)
+    yhat = tf.matmul(h1, W2) + b2
 
-        correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(batch_y,1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    correct_prediction = tf.equal(tf.argmax(yhat,1), tf.argmax(batch_y,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    # one = tf.constant(1.0, dtype=tf.float32)
+    # fraction_misclassified = tf.subtract(one, accuracy, name='FractionMisclassified')
+    # return fraction_misclassified
 
     # with tf.variable_scope('Optimizee_Cost'):
-        cross_entropy = tf.reduce_mean(COST(labels=batch_y, logits=yhat))
-            # tf.scalar_summary('optimizee cross entropy', cross_entropy)
-        return cross_entropy
+    cross_entropy = tf.reduce_mean(COST(labels=batch_y, logits=yhat))
+    # tf.scalar_summary('optimizee cross entropy', cross_entropy)
+    return cross_entropy
 
 
 # tf.sigmoid, tf.tanh, tf.nn.elu, tf.

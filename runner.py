@@ -90,7 +90,7 @@ def bias_variable(shape):
 
 
 def initialize_x(DIMS):
-    return tf.random_uniform([DIMS], -1., 1.)
+    return tf.truncated_normal([DIMS], stddev=0.01)
 
 
 def learn_optimizee(optimizer, problem, batch):
@@ -179,7 +179,7 @@ def optimize_step(loss):
         Returns:
             (tf.Operation) ADAM optimization step for the LSTM
     """
-    optimizer = tf.train.AdamOptimizer(0.1) # learning rate
+    optimizer = tf.train.AdamOptimizer(0.001) # learning rate
     gradients, v = zip(*optimizer.compute_gradients(loss))
     gradients, _ = tf.clip_by_global_norm(gradients, 1.) # important because some values are large
     return optimizer.apply_gradients(zip(gradients, v))
@@ -257,7 +257,6 @@ def display_base_optimizers(sess, loss_list, n_times, batch):
 def main():
     print('Initializing...')
     sess = tf.InteractiveSession()
-    sess.run(tf.global_variables_initializer())
 
     problem = PROBLEM_NEURAL_SIGMOID
     print('Work on problem {}.'.format(problem.name))
@@ -267,9 +266,14 @@ def main():
     batch = (batch_x, batch_y)
     # sgd_losses = learn_optimizee(g_sgd, problem, batch)
     # rms_losses = learn_optimizee(g_rms, problem, batch)
+    
+    # This is the set of losses from training a NN using the given optimizer
+    # for X number of steps
     rnn_losses = learn_optimizee(g_rnn, problem, batch)
 
+    # We sum up all losses to want to converge quickly to a low loss
     sum_losses = tf.reduce_sum(rnn_losses)
+
     apply_update = optimize_step(sum_losses)
     # display_base_optimizers(sess, loss_list=[sgd_losses, rms_losses], n_times=1, batch=batch)
 
